@@ -10,12 +10,12 @@ public class TestMessageScript : MonoBehaviour
 
     public void Update()
     {
-        timeOut = 3;
+        timeOut = 2;
         timeElapsed += Time.deltaTime;
 
         if (timeElapsed >= timeOut)
         {
-            _ = GetMessageAsync();
+             _ = GetMessageAsync();
             timeElapsed = 0.0f;
         }
     }
@@ -72,7 +72,7 @@ public class Command
     }
     public Vector3 GetRandomSpawnPlace()
     {
-        return new Vector3(Random.Range(0.0f, -2.0f), 3, Random.Range(0.0f, 2.0f));
+        return new Vector3(Random.Range(-8.0f, 0.0f), 3, Random.Range(-4.0f, 4.0f));
     }
 
     public static Command CreateFromJSON(string jsonString)
@@ -114,24 +114,27 @@ public class Command
     public void Spawn()
     {
         Debug.Log("Spawn");
-        GameObject prefab = this.GetRandomPreFab();
+        // キャラクターを出現させる位置を取得
         Vector3 pos = this.GetRandomSpawnPlace();
-        
+
+        // 指定のプレハブからキャラクターをインスタンス化する
+        GameObject prefab = this.GetRandomPreFab();
         GameObject obj = Object.Instantiate(prefab, pos, Quaternion.identity);
-        Debug.Log("name is");
-        Debug.Log(this.user);
         obj.name = this.user;
+
+        // キャラクターの名前を表示
         obj.GetComponent<OperationName>().SetName(this.user_name);
 
-        // 注目
+        // カメラのターゲットを変更
         GameObject camera = GameObject.Find("Main Camera");
-        obj.transform.LookAt(camera.transform);
-        camera.transform.LookAt(obj.transform);
-        camera.GetComponent<Camera>().fieldOfView = 32;
+        camera.GetComponent<CameraController>().target = obj.transform;
+
+        // キャラクターがカメラ方向に回転
+        float y = camera.transform.eulerAngles.y;
+        obj.transform.eulerAngles = new Vector3(obj.transform.eulerAngles.x, camera.transform.eulerAngles.y+180, obj.transform.eulerAngles.z);
+        
+        // アニメーションを実行
         obj.GetComponent<Animator>().CrossFade("Victory_Battle_SwordAndShield", 0.3f);
-        camera.GetComponent<Camera>().fieldOfView = 64;
-
-
 
     }
     public void Charge()

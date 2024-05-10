@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
+using UnityEngine.AI;
 
 public class TestMessageScript : MonoBehaviour
 {
@@ -10,7 +11,7 @@ public class TestMessageScript : MonoBehaviour
 
     public void Update()
     {
-        timeOut = 2;
+        timeOut = 5;
         timeElapsed += Time.deltaTime;
 
         if (timeElapsed >= timeOut)
@@ -35,8 +36,15 @@ public class TestMessageScript : MonoBehaviour
     public void Move(string id, Vector3 target)
     {
         GameObject obj = GameObject.Find(id);
-        NavWalk nav = obj.GetComponent<NavWalk>();
-        nav.Move(target);
+        //NavWalk nav = obj.GetComponent<NavWalk>();
+        //nav.Move(target);
+        //obj.GetComponent<NavMeshAgent>().Move(target);
+        Vector3 target2 = new Vector3(
+            obj.transform.position.x + 2,
+            obj.transform.position.y,
+            obj.transform.position.z + 2
+        );
+        obj.GetComponent<NavMeshAgent>().SetDestination(target2);
     }
 
 }
@@ -52,6 +60,8 @@ public class Command
     public string arg3;
     public string arg4;
 
+    private GameObject CharacterObj;
+
     private Vector3[] places =
     {
         new Vector3(0, 3, 0),
@@ -62,22 +72,134 @@ public class Command
     private string[] prefab_names = {
         "MaleCharacterPBR",
         "FemaleCharacterPBR",
+        "Colobus"
     };
 
     public GameObject GetRandomPreFab()
     {
         string prefab_name = this.prefab_names[Random.Range(0, this.prefab_names.Length)];
-        return GameObject.Find(prefab_name);
+        return GameObject.Find("Characters/" + prefab_name);
 
     }
     public Vector3 GetRandomSpawnPlace()
     {
-        return new Vector3(Random.Range(-8.0f, 0.0f), 3, Random.Range(-4.0f, 4.0f));
+        return new Vector3(Random.Range(515.0f, 525.0f), 10.0f, Random.Range(365.0f, 375.0f));
+    }
+    public GameObject GetCharacterObject()
+    {
+        GameObject obj = GameObject.Find("Characters/" + this.user);
+        if (obj == null)
+        {
+            obj = Object.Instantiate(
+                this.GetRandomPreFab(),
+                this.GetRandomSpawnPlace(), 
+                Quaternion.identity
+            );
+            obj.name = this.user;
+            obj.GetComponent<CharaController>().SetName(this.user_name);
+        }
+        return obj;
+    }
+    
+    public void Look(GameObject obj, int angle = 0)
+    {
+        Camera.main.GetComponent<CameraController>().target = obj.transform;
+
+        // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ãŒã‚«ãƒ¡ãƒ©æ–¹å‘ã«å›è»¢
+        float y = Camera.main.transform.eulerAngles.y;
+        obj.transform.eulerAngles = new Vector3(
+            obj.transform.eulerAngles.x,
+            Camera.main.transform.eulerAngles.y + 180 + angle,
+            obj.transform.eulerAngles.z
+        );
+    }
+    public void Animate(GameObject obj, string emote_name)
+    {
+        Debug.Log("Animate is ");
+        Debug.Log(emote_name);
+        obj.GetComponent<Animator>().CrossFade(emote_name, 0.3f);
     }
 
     public static Command CreateFromJSON(string jsonString)
     {
         return JsonUtility.FromJson<Command>(jsonString);
+    }
+
+    public void Spawn()
+    {
+        Debug.Log("Spawn");
+        // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å‡ºç¾ã•ã›ã‚‹
+        GameObject obj = this.GetCharacterObject();
+        // ã‚«ãƒ¡ãƒ©ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’å¤‰æ›´
+        this.Look(obj);
+        // å‡ºç¾ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’å®Ÿè¡Œ
+        this.Animate(obj, "Spawn");
+
+    }
+
+    public void Charge()
+    {
+        Debug.Log("Charge");
+        // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å–å¾—
+        GameObject obj = this.GetCharacterObject();
+        // ã‚«ãƒ¡ãƒ©ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’å¤‰æ›´
+        this.Look(obj);
+        // ãƒãƒ£ãƒ¼ã‚¸ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚’å®Ÿè¡Œ
+        this.Animate(obj, "Charge");
+
+    }
+    public void Despawn()
+    {
+        Debug.Log("Despawn");
+        // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å–å¾—
+        GameObject obj = this.GetCharacterObject();
+        // ã‚«ãƒ¡ãƒ©ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’å¤‰æ›´
+        this.Look(obj);
+        //æ¶ˆæ»…ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³
+        this.Animate(obj, "Despawn");
+
+        //ã‚¤ãƒ³ã‚¹ã‚¿ãƒ³ã‚¹ã‚’å‰Šé™¤
+        Object.Destroy(obj, 2.0f);
+    }
+    public void Emote()
+    {
+        Debug.Log("Emote");
+        GameObject obj = this.GetCharacterObject();
+        this.Animate(obj, this.arg1);
+    }
+
+    public void Subject()
+    {
+        Debug.Log("Subject");
+    }
+    public void Place()
+    {
+        Debug.Log("Place");
+        // ã‚­ãƒ£ãƒ©ã‚¯ã‚¿ãƒ¼ã‚’å–å¾—
+        GameObject obj = this.GetCharacterObject();
+        // ã‚«ãƒ¡ãƒ©ã®ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’å¤‰æ›´
+        this.Look(obj, 180);
+
+        // å ´æ‰€ã¾ã§ç§»å‹•ã•ã›ã‚‹
+        Vector3 pos = GameObject.Find("Places/" + this.arg1).transform.position;
+        NavMeshAgent agent = obj.GetComponent<NavMeshAgent>();
+        agent.stoppingDistance = 5f;
+        agent.SetDestination(pos);
+    }
+    public void Comment()
+    {
+        Debug.Log("Comment");
+    }
+    public void Chara()
+    {
+        Debug.Log("Chara");
+        GameObject obj = GameObject.Find(this.user);
+        Vector3 pos = obj.transform.position;
+        Object.Destroy(obj);
+
+        GameObject newprefab = GameObject.Find(this.arg1);
+        GameObject newobj = Object.Instantiate(newprefab, pos, Quaternion.identity);
+        newobj.name = this.user;
     }
     public void Execute()
     {
@@ -111,89 +233,4 @@ public class Command
                 break;
         }
     }
-    public void Spawn()
-    {
-        Debug.Log("Spawn");
-        // ƒLƒƒƒ‰ƒNƒ^[‚ğoŒ»‚³‚¹‚éˆÊ’u‚ğæ“¾
-        Vector3 pos = this.GetRandomSpawnPlace();
-
-        // w’è‚ÌƒvƒŒƒnƒu‚©‚çƒLƒƒƒ‰ƒNƒ^[‚ğƒCƒ“ƒXƒ^ƒ“ƒX‰»‚·‚é
-        GameObject prefab = this.GetRandomPreFab();
-        GameObject obj = Object.Instantiate(prefab, pos, Quaternion.identity);
-        obj.name = this.user;
-
-        // ƒLƒƒƒ‰ƒNƒ^[‚Ì–¼‘O‚ğ•\¦
-        obj.GetComponent<OperationName>().SetName(this.user_name);
-
-        // ƒJƒƒ‰‚Ìƒ^[ƒQƒbƒg‚ğ•ÏX
-        GameObject camera = GameObject.Find("Main Camera");
-        camera.GetComponent<CameraController>().target = obj.transform;
-
-        // ƒLƒƒƒ‰ƒNƒ^[‚ªƒJƒƒ‰•ûŒü‚É‰ñ“]
-        float y = camera.transform.eulerAngles.y;
-        obj.transform.eulerAngles = new Vector3(obj.transform.eulerAngles.x, camera.transform.eulerAngles.y+180, obj.transform.eulerAngles.z);
-        
-        // ƒAƒjƒ[ƒVƒ‡ƒ“‚ğÀs
-        obj.GetComponent<Animator>().CrossFade("Victory_Battle_SwordAndShield", 0.3f);
-
-    }
-    public void Charge()
-    {
-        Debug.Log("Charge");
-        GameObject camera = GameObject.Find("Main Camera");
-        GameObject obj = GameObject.Find(this.user);
-        obj.transform.LookAt(camera.transform);
-        camera.transform.LookAt(obj.transform);
-
-    }
-    public void Despawn()
-    {
-        Debug.Log("Despawn");
-        GameObject obj = GameObject.Find(this.user);
-        if (obj)
-        {
-            Object.Destroy(obj);
-        }
-    }
-    public void Emote()
-    {
-        Debug.Log("Emote");
-        GameObject obj = GameObject.Find(this.user);
-        obj.GetComponent<Animator>().CrossFade(this.arg1, 0.3f);
-
-    }
-    public void Subject()
-    {
-        Debug.Log("Subject");
-    }
-    public void Place()
-    {
-        // êŠ‚Ì“Á’è
-        Debug.Log("Place");
-        Dictionary<string, Vector3> dict = new Dictionary<string, Vector3>();
-        dict.Add("A12", new Vector3(3, 3, 2));
-        dict.Add("A13", new Vector3(3, 3, 3));
-
-        // êŠ‚Ü‚ÅˆÚ“®‚³‚¹‚é
-        GameObject obj = GameObject.Find(this.user);
-        // obj.transform.position = dict[this.arg1];
-        obj.GetComponent<NavWalk>().Move(dict[this.arg1]);
-
-    }
-    public void Comment()
-    {
-        Debug.Log("Comment");
-    }
-    public void Chara()
-    {
-        Debug.Log("Chara");
-        GameObject obj = GameObject.Find(this.user);
-        Vector3 pos = obj.transform.position;
-        Object.Destroy(obj);
-
-        GameObject newprefab = GameObject.Find(this.arg1);
-        GameObject newobj = Object.Instantiate(newprefab, pos, Quaternion.identity);
-        newobj.name = this.user;
-    }
-
 }

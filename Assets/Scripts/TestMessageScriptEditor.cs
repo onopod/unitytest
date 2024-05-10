@@ -23,9 +23,9 @@ public class TestMessageScriptEditor : Editor
         // EditorÀs’†‚Ì‚İ—LŒø‰»‚ÈUI‚ğİ’è‚·‚é
         if (EditorApplication.isPlaying)
         {
-            if (GUILayout.Button("GetMessage"))
+            if (GUILayout.Button("Move"))
             {
-                _ = targetScript.GetMessageAsync();
+                targetScript.Move("MaleCharacterPBR", new Vector3(3, 7, 60));
             }
         }
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -22,12 +23,17 @@ public class NavWalk : MonoBehaviour
     public void Move(Vector3 point)
     {
         // エージェントが現在設定された目標地点に行くように設定します
-        agent.destination = point;
+        Debug.Log("test");
+        //agent.Move(new Vector3(3, 7, 60));
+        Boolean b = agent.SetDestination(point);
+        Debug.Log(b);
+        
     }
 
     // Update is called once per frame
     void Update()
     {
+        //Debug.Log(agent.velocity.magnitude);
         animator.SetFloat("Move", agent.velocity.magnitude);
     }
 }

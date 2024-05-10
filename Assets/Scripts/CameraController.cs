@@ -10,7 +10,7 @@ public class CameraController : MonoBehaviour
 
     void Start()
     {
-        offset = new Vector3(2, 2, 2);
+        offset = new Vector3(3, 2, 3);
     }
 
     void Update()

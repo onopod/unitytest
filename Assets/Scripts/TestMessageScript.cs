@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class TestMessageScript : MonoBehaviour
 {
@@ -26,13 +27,23 @@ public class TestMessageScript : MonoBehaviour
         using var client = new HttpClient();
         HttpResponseMessage response = await client.GetAsync(@"http://localhost:8000/api/commands/unexecute_unity/");
         string json_text = await response.Content.ReadAsStringAsync();
+        Debug.Log("Command is");
         Debug.Log(json_text);
         if(json_text != "")
         {
+            
             Command command = Command.CreateFromJSON(json_text);
+
+            // ユーザー情報を取得
+            HttpResponseMessage user_response = await client.GetAsync("http://localhost:8000/api/users/" + command.user + "/");
+            string user_json_text = await user_response.Content.ReadAsStringAsync();
+            command.userdata = User.CreateFromJSON(user_json_text);
+            Debug.Log("userdata is");
+            Debug.Log(command.userdata.name);
             command.Execute();
         }
     }
+    
 }
 
 [System.Serializable]
@@ -45,6 +56,8 @@ public class Command
     public string arg2;
     public string arg3;
     public string arg4;
+
+    public User userdata;
 
     private GameObject CharacterObj;
 
@@ -115,15 +128,22 @@ public class Command
     public void Spawn()
     {
         Debug.Log("Spawn");
+        //ユーザーデータをAPIから取得
+        Debug.Log(this.userdata.name);
+        GameObject canvas = GameObject.Find("Canvases").transform.Find("StatusCanvas").gameObject;
+        canvas.SetActive(true);
+        GameObject.Find("Canvases/StatusCanvas/LeftPanel/user_text").gameObject.GetComponent<Text>().text = "名前：\n" + userdata.name + "\n------------------------------\n学習内容：\n" +
+userdata.subject + "\n場所\n" + userdata.place;
         // キャラクターを出現させる
         GameObject obj = this.GetCharacterObject();
         // カメラのターゲットを変更
         this.Look(obj);
         // 出現アニメーションを実行
         this.Animate(obj, "Spawn");
+        //canvas.SetActive(false);
+
 
     }
-
     public void Charge()
     {
         Debug.Log("Charge");
@@ -219,5 +239,19 @@ public class Command
             default:
                 break;
         }
+    }
+}
+public class User
+{
+    public string id;
+    public string name;
+    public string emote;
+    public string chara;
+    public string place;
+    public string subject;
+    public string comment;
+    public static User CreateFromJSON(string jsonString)
+    {
+        return JsonUtility.FromJson<User>(jsonString);
     }
 }

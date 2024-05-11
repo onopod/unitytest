@@ -33,20 +33,6 @@ public class TestMessageScript : MonoBehaviour
             command.Execute();
         }
     }
-    public void Move(string id, Vector3 target)
-    {
-        GameObject obj = GameObject.Find(id);
-        //NavWalk nav = obj.GetComponent<NavWalk>();
-        //nav.Move(target);
-        //obj.GetComponent<NavMeshAgent>().Move(target);
-        Vector3 target2 = new Vector3(
-            obj.transform.position.x + 2,
-            obj.transform.position.y,
-            obj.transform.position.z + 2
-        );
-        obj.GetComponent<NavMeshAgent>().SetDestination(target2);
-    }
-
 }
 
 [System.Serializable]
@@ -61,6 +47,7 @@ public class Command
     public string arg4;
 
     private GameObject CharacterObj;
+
 
     private Vector3[] places =
     {

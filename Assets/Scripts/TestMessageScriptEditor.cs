@@ -25,7 +25,7 @@ public class TestMessageScriptEditor : Editor
         {
             if (GUILayout.Button("Move"))
             {
-                targetScript.Move("MaleCharacterPBR", new Vector3(3, 7, 60));
+                //targetScript.Move("MaleCharacterPBR", new Vector3(3, 7, 60));
             }
         }
     }
